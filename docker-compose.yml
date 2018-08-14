@@ -1,0 +1,56 @@
+version: '3'
+networks:
+  private:
+    driver: overlay
+volumes:
+  jenkins-home:
+
+
+services:
+  jenkins:
+    image: ah0y/jenkins-docker:latest
+    ports:
+      - 8080:8080
+    volumes:
+      - jenkins-home:/var/jenkins_home #volume storage
+      - /var/run/docker.sock:/var/run/docker.sock #allows docker inside docker
+    deploy:
+      placement:
+       constraints: [node.role == manager]   #added these constraints because i thought jenkins and the grid hub would need to be on the same machine, so that jenkins could handle the nodes themselves, not actually the case
+
+  hub:
+    image: selenium/hub
+    ports:
+      - 4444:4444
+    deploy:
+     mode: global
+     placement:
+       constraints:
+         - node.role == manager
+    environment:
+     - GRID_BROWSER_TIMEOUT=60000
+     - GRID_TIMEOUT=60000
+     - GRID_MAX_SESSION=50
+     - GRID_MAX_INSTANCES=3
+     - GRID_CLEAN_UP_CYCLE=60000
+     - GRID_UNREGISTER_IF_STILL_DOWN_AFTER=180000
+     - GRID_NEW_SESSION_WAIT_TIMEOUT=60000
+    networks:
+     - private
+
+
+  chrome:
+    image: selenium/node-chrome:3.12.0-cobalt
+    depends_on:
+      - hub
+    environment:
+      - HUB_PORT_4444_TCP_ADDR=hub
+      - HUB_PORT_4444_TCP_PORT=4444
+      - NODE_MAX_SESSION=1
+    entrypoint: bash -c 'SE_OPTS="-host $$HOSTNAME -port 5556" /opt/bin/entry_point.sh'
+    ports:
+      - "5556:5556"
+    deploy:
+      replicas: 1
+    networks:
+      - private
