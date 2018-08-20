@@ -35,7 +35,7 @@ Before trying to get this Docker solution running, I ***highly*** reccomend you 
 1. visit `<myvm1 ip>:8080` to access Jenkins
 2. run `docker container ls` 
 3. note the **container id** (column on the far left) of the jenkins-docker image
-4. run `docker exec -it <container id of jenkins-docker image> ` to access the Jenkins container
+4. run `docker exec -it <container id of jenkins-docker image> bash` to access the Jenkins container
 5. run `cd /var/jenkins_home/secrets/`
 6. run `cat initialAdminPassword` to recieve the password to unlock Jenkins
 7. copy the password you've recieved in step 6 into Jenkins and hit continue
